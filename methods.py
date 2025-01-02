@@ -235,32 +235,6 @@ def prepare_regression_data_responders_only(features, responders, target):
     
     return X, y
 
-def prepare_regression_data_top3_responders(features, responders, target):
-    """
-    Prepare X and y for regression using only top 3 responders (3, 0, and 7)
-    """
-    # Reset indices
-    responders = responders.reset_index(drop=True)
-    target = target.reset_index(drop=True)
-    
-    # Make sure all have same length
-    min_len = min(len(responders), len(target))
-    responders = responders.iloc[:min_len]
-    target = target.iloc[:min_len]
-    
-    # Select only top 3 responders
-    top_responders = ['responder_3', 'responder_0', 'responder_7']
-    X = responders[top_responders]
-    y = target
-    
-    print("\nRegression data shapes:")
-    print(f"X shape: {X.shape} (samples, top 3 responders)")
-    print(f"y shape: {y.shape}")
-    print("\nTop 3 responder columns:")
-    print("Responders:", X.columns.tolist())
-    
-    return X, y
-
 def train_xgboost_model(X, y):
     """
     Train an XGBoost regression model with basic hyperparameters
