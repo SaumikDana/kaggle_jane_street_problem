@@ -9,16 +9,44 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
 from sklearn.model_selection import GridSearchCV
 
+def clean_data(features, responders):
+
+    # Print columns before cleaning
+    print(f"\nTotal feature columns before cleaning: {len(features.columns)}")
+    print(f"Total responder columns before cleaning: {len(responders.columns)}")
+    
+    # Get clean features (no NaN)
+    features_with_nan = features.columns[features.isna().any()].tolist()
+    clean_features = features.loc[:, ~features.isna().any()].reset_index(drop=True)
+    
+    # Get clean responders (no NaN)
+    responders_with_nan = responders.columns[responders.isna().any()].tolist()
+    clean_responders = responders.loc[:, ~responders.isna().any()].reset_index(drop=True)
+        
+    # Print dropped columns
+    if features_with_nan:
+        print("\nFeature columns dropped due to NaN values:")
+        for col in features_with_nan:
+            print(f"- {col}")
+    
+    if responders_with_nan:
+        print("\nResponder columns dropped due to NaN values:")
+        for col in responders_with_nan:
+            print(f"- {col}")
+    
+    print(f"\nNumber of clean features: {len(clean_features.columns)}")
+    print(f"Number of clean responders: {len(clean_responders.columns)}")
+    
+    return clean_features, clean_responders
+
 def create_timeseries_for_symbol(df, symbol_id):
     """
     Create feature and responder time series for a given symbol
-    
     Args:
         df: Input dataframe
         symbol_id: Symbol to process
-    
     Returns:
-        tuple: (feature_series, responder_series)
+        tuple: (feature_series, responder_series, target_series)
     """
     # Sort by date_id and time_id, then filter for our symbol
     df_sorted = df.sort_values(['date_id', 'time_id'])
@@ -27,23 +55,23 @@ def create_timeseries_for_symbol(df, symbol_id):
     # Get column names
     feature_cols = [col for col in df.columns if col.startswith('feature_')]
     responder_cols = [col for col in df.columns if col.startswith('responder_') and col != 'responder_6']
-
     target_col = 'responder_6'
     
     # Get first date and its last time for responders
     first_date = symbol_data['date_id'].min()
     first_date_last_time = symbol_data[symbol_data['date_id'] == first_date]['time_id'].max()
     first_date_last_responders = symbol_data[
-        (symbol_data['date_id'] == first_date) & 
+        (symbol_data['date_id'] == first_date) &
         (symbol_data['time_id'] == first_date_last_time)
     ][responder_cols]
     
     # Get all data after first date (for features)
     feature_series = symbol_data[symbol_data['date_id'] > first_date][feature_cols].copy()
-
+    
     # Get all data after first date (for target)
     target_series = symbol_data[symbol_data['date_id'] > first_date][target_col].copy()
-
+    target_series = target_series.reset_index(drop=True)
+    
     # Get all data after first date except the last row (for responders)
     responder_data = symbol_data[symbol_data['date_id'] > first_date][responder_cols].iloc[:-1]
     
@@ -52,18 +80,12 @@ def create_timeseries_for_symbol(df, symbol_id):
     
     # Print verification
     print(f"\nFeature series shape: {feature_series.shape}")
-    print("\nFirst few rows of feature series:")
-    print(feature_series.head())
-
     print(f"\nResponder series shape: {responder_series.shape}")
-    print("\nFirst few rows of responder series (should start with final time_id of first date):")
-    print(responder_series.head())
-
     print(f"\nTarget series shape: {target_series.shape}")
-    print("\nFirst few rows of target series:")
-    print(target_series.head())
+    
+    clean_features, clean_responders = clean_data(feature_series, responder_series)
 
-    return feature_series, responder_series, target_series
+    return clean_features, clean_responders, target_series
 
 def plot_separate_timeseries(features, responders, target):
     """
@@ -117,36 +139,21 @@ def plot_separate_timeseries(features, responders, target):
 
 def prepare_regression_data(features, responders, target):
     """
-    Prepare X and y for regression by:
-    1. Removing features with NaN
-    2. Combining clean features with responders
-    3. Aligning with target
+    Prepare X and y for regression
     """
-    # Get clean features (no NaN)
-    clean_features = features.loc[:, ~features.isna().any()].reset_index(drop=True)
-    responders = responders.reset_index(drop=True)
-    target = target.reset_index(drop=True)
-    
-    print(f"Number of clean features: {len(clean_features.columns)}")
-    
     # Make sure all have same length
-    min_len = min(len(clean_features), len(responders), len(target))
-    clean_features = clean_features.iloc[:min_len]
+    min_len = min(len(features), len(responders), len(target))
+    features = features.iloc[:min_len]
     responders = responders.iloc[:min_len]
     target = target.iloc[:min_len]
     
     # Combine clean features and responders for X
-    X = pd.concat([clean_features, responders], axis=1)
+    X = pd.concat([features, responders], axis=1)
     y = target
     
     print("\nRegression data shapes:")
     print(f"X shape: {X.shape} (samples, features+responders)")
     print(f"y shape: {y.shape}")
-    
-    # Print first few column names to verify
-    print("\nFirst few X columns:")
-    print("Features:", clean_features.columns[:5].tolist())
-    print("Responders:", responders.columns[:5].tolist())
     
     return X, y
 
