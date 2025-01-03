@@ -48,9 +48,9 @@ def create_timeseries_for_symbol(df, symbol_id):
     Returns:
         tuple: (feature_series, responder_series, target_series)
     """
-    # Sort by date_id and time_id, then filter for our symbol
-    df_sorted = df.sort_values(['date_id', 'time_id'])
-    symbol_data = df_sorted[df_sorted['symbol_id'] == symbol_id].copy()
+    # Filter for our symbol, then sort by date_id and time_id 
+    df_for_symbol = df[df['symbol_id'] == symbol_id].copy()
+    symbol_data = df_for_symbol.sort_values(['date_id', 'time_id'])
     
     # Get column names
     feature_cols = [col for col in df.columns if col.startswith('feature_')]
@@ -551,10 +551,12 @@ def train_best_xgboost_model(X, y):
         random_state=42
     )
     
+    X_train_sampled, y_train_sampled = sample_training_data(X_train, y_train)
+
     # Train the model with eval set for validation
     model.fit(
-        X_train, y_train,
-        eval_set=[(X_train, y_train), (X_test, y_test)],
+        X_train_sampled, y_train_sampled,
+        eval_set=[(X_train_sampled, y_train_sampled), (X_test, y_test)],
         verbose=False
     )
     
