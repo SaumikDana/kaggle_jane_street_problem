@@ -335,6 +335,10 @@ def sample_training_data(X_train, y_train, sample_fraction=1/10, n_bins=10):
     if len(X_train_sampled) == 0 or len(y_train_sampled) == 0:
         raise ValueError("Failed to create valid samples for tree-based models")
 
+    print("\nSampled data shapes:")
+    print(f"X shape: {X_train_sampled.shape} (samples, features+responders)")
+    print(f"y shape: {y_train_sampled.shape}")
+
     return X_train_sampled, y_train_sampled
 
 def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/10, random_state=42, show_plots=True):
@@ -435,10 +439,6 @@ def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/10, ra
    for name, model in tree_models.items():
        print(f"\nTraining {name} with sampled data...")
        try:
-           print("\nSampled data shapes:")
-           print(f"X shape: {X_train_sampled.shape} (samples, features+responders)")
-           print(f"y shape: {y_train_sampled.shape}")
-
            model.fit(X_train_sampled, y_train_sampled)
            
            # Predict on full datasets
@@ -522,7 +522,7 @@ def tune_xgboost(X, y):
     X_sampled, y_sampled = sample_training_data(X, y)
 
     # Fit GridSearchCV
-    grid_search.fit(X, y)
+    grid_search.fit(X_sampled, y_sampled)
     
     # Print results
     print("\nBest parameters found:")
