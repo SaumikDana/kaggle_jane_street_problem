@@ -422,3 +422,55 @@ def evaluate_best_model(model, X_train, X_test, y_train, y_test):
     print(f"Test R²: {test_r2:.4f}")
         
     return model
+
+def prepare_prediction_data(features_df, lags_df):
+    """
+    Prepare data for prediction by:
+    1. Getting clean features (no NaN)
+    2. Combining with lagged responders (excluding responder_6)
+    """
+    # Get clean features
+    clean_features = features_df.loc[:, ~features_df.isna().any()]
+    feature_cols = [col for col in clean_features.columns if col.startswith('feature_')]
+    clean_features = clean_features[feature_cols]
+    
+    # Get lagged responders (excluding responder_6)
+    lag_cols = [col for col in lags_df.columns if col.startswith('responder_') and not col.startswith('responder_6')]
+    responder_lags = lags_df[lag_cols]
+    
+    # Combine features and responders
+    X = pd.concat([clean_features, responder_lags], axis=1)
+    
+    print("\nPrediction data preparation:")
+    print(f"Number of clean features: {len(feature_cols)}")
+    print(f"Number of lagged responders: {len(lag_cols)}")
+    print(f"Final X shape: {X.shape}")
+    
+    return X
+
+def make_predictions(model, features_df, lags_df):
+    """
+    Use trained model to predict responder_6
+    """
+    # Prepare prediction data
+    X = prepare_prediction_data(features_df, lags_df)
+    
+    # Make predictions
+    predictions = model.predict(X)
+    
+    # Create output DataFrame
+    results = pd.DataFrame({
+        'symbol_id': features_df['symbol_id'],
+        'predicted_responder_6': predictions
+    })
+    
+    if 'responder_6_lag_1' in lags_df.columns:
+        results['actual_lag'] = lags_df['responder_6_lag_1']
+        
+    if 'weight' in features_df.columns:
+        results['weight'] = features_df['weight']
+    
+    print("\nPrediction Results:")
+    print(results)
+    
+    return results
