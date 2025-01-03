@@ -1,5 +1,4 @@
 import pandas as pd
-from methods import create_timeseries_for_symbol
 import os
 
 if __name__ == "__main__":
