@@ -83,7 +83,8 @@ def create_timeseries_for_symbol(df, symbol_id):
     print(f"\nResponder series shape: {responder_series.shape}")
     print(f"\nTarget series shape: {target_series.shape}")
     
-    clean_features, clean_responders = clean_data(feature_series, responder_series)
+    # clean_features, clean_responders = clean_data(feature_series, responder_series)
+    clean_features, clean_responders = feature_series, responder_series
 
     return clean_features, clean_responders, target_series
 
@@ -138,23 +139,12 @@ def plot_separate_timeseries(features, responders, target):
     plt.show()
 
 def prepare_regression_data(features, responders, target):
-    """
-    Prepare X and y for regression
-    """
-    # Make sure all have same length
-    min_len = min(len(features), len(responders), len(target))
-    features = features.iloc[:min_len]
-    responders = responders.iloc[:min_len]
-    target = target.iloc[:min_len]
-    
-    # Combine clean features and responders for X
-    X = pd.concat([features, responders], axis=1)
-    y = target
-    
-    print("\nRegression data shapes:")
-    print(f"X shape: {X.shape} (samples, features+responders)")
+    common_indices = features.index.intersection(responders.index).intersection(target.index)
+    X = pd.concat([features.loc[common_indices], responders.loc[common_indices]], axis=1)
+    y = target.loc[common_indices]
+    print(f"\nRegression data shapes:")
+    print(f"X shape: {X.shape}")
     print(f"y shape: {y.shape}")
-    
     return X, y
 
 def train_model(X, y):
