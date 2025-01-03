@@ -269,74 +269,224 @@ def train_xgboost_model(X, y):
     
     return model, X_train, X_test, y_train, y_test
 
-def train_and_evaluate_multiple_models(X, y):
-    """
-    Train and evaluate multiple models on the same data
-    """
-    # Split data
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    
-    # Define models
-    models = {
-        'Linear Regression': LinearRegression(),
-        'Ridge': Ridge(alpha=1.0),
-        'Lasso': Lasso(alpha=1.0),
-        'Random Forest': RandomForestRegressor(n_estimators=100, random_state=42),
-        'XGBoost': XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=6, random_state=42)
-    }
-    
-    # Train and evaluate each model
-    results = {}
-    
-    for name, model in models.items():
-        print(f"\nTraining {name}...")
+def sample_training_data(X_train, y_train, sample_fraction=1/10, n_bins=10):
+
+    # Handle RF and XGB with binning
+    sample_size = int(len(X_train) * sample_fraction)
+
+    # Initialize sampling variables
+    sampling_succeeded = False
+    X_train_sampled = None
+    y_train_sampled = None
+
+    # Try different binning approaches
+    y_train_df = pd.DataFrame(y_train, columns=['target'])
+
+    try:
+        # Try quantile-based bins first
+        y_train_df['bins'] = pd.qcut(y_train_df['target'], q=n_bins, labels=False, duplicates='drop')
+        sampling_succeeded = True
+    except ValueError:
+        try:
+            # If quantile binning fails, try equal-width bins
+            y_train_df['bins'] = pd.cut(y_train_df['target'], bins=n_bins, labels=False)
+            sampling_succeeded = True
+        except ValueError:
+            print("Warning: Binning methods failed. Falling back to random sampling.")
+            sampling_succeeded = False
+
+    if sampling_succeeded:
+        # Proceed with bin-based sampling
+        bin_sample_size = max(1, sample_size // n_bins)  # Ensure at least 1 sample per bin
+        sampled_indices = []
         
-        # Train
-        model.fit(X_train, y_train)
+        # Get unique bins that actually exist in the data
+        existing_bins = y_train_df['bins'].dropna().unique()
         
-        # Predict
-        y_train_pred = model.predict(X_train)
-        y_test_pred = model.predict(X_test)
+        for bin_idx in existing_bins:
+            bin_indices = y_train_df[y_train_df['bins'] == bin_idx].index.values  # Get numpy array
+            if len(bin_indices) > 0:
+                n_samples = min(len(bin_indices), bin_sample_size)
+                sampled_bin_indices = np.random.choice(bin_indices, n_samples, replace=False)
+                sampled_indices.extend(sampled_bin_indices)
         
-        # Calculate metrics
-        train_mse = mean_squared_error(y_train, y_train_pred)
-        test_mse = mean_squared_error(y_test, y_test_pred)
-        train_r2 = r2_score(y_train, y_train_pred)
-        test_r2 = r2_score(y_test, y_test_pred)
+        # Convert to numpy array for indexing
+        sampled_indices = np.array(sampled_indices)
         
-        print(f"{name} Performance:")
-        print(f"Train MSE: {train_mse:.4f}")
-        print(f"Test MSE: {test_mse:.4f}")
-        print(f"Train R²: {train_r2:.4f}")
-        print(f"Test R²: {test_r2:.4f}")
-        
-        # Store results
-        results[name] = {
-            'model': model,
-            'test_pred': y_test_pred,
-            'test_actual': y_test,
-            'metrics': {
-                'train_mse': train_mse,
-                'test_mse': test_mse,
-                'train_r2': train_r2,
-                'test_r2': test_r2
-            }
-        }
-    
-    # Plot comparison of actual vs predicted for all models
-    plt.figure(figsize=(15, 10))
-    for i, (name, result) in enumerate(results.items(), 1):
-        plt.subplot(2, 3, i)
-        plt.scatter(result['test_actual'], result['test_pred'], alpha=0.5)
-        plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
-        plt.xlabel('Actual')
-        plt.ylabel('Predicted')
-        plt.title(f'{name}\nTest R²: {result["metrics"]["test_r2"]:.4f}')
-    
-    plt.tight_layout()
-    plt.show()
-    
-    return results
+        # Verify we got some samples
+        if len(sampled_indices) > 0:
+            X_train_sampled = X_train[sampled_indices]
+            y_train_sampled = y_train[sampled_indices]
+        else:
+            sampling_succeeded = False
+
+    # If all sampling methods failed or got no samples, fall back to random sampling
+    if not sampling_succeeded or X_train_sampled is None or len(X_train_sampled) == 0:
+        print("Falling back to random sampling...")
+        sampled_indices = np.random.choice(
+            len(X_train), 
+            size=min(sample_size, len(X_train)), 
+            replace=False
+        )
+        X_train_sampled = X_train[sampled_indices]
+        y_train_sampled = y_train[sampled_indices]
+
+    # Verify final samples
+    if len(X_train_sampled) == 0 or len(y_train_sampled) == 0:
+        raise ValueError("Failed to create valid samples for tree-based models")
+
+    return X_train_sampled, y_train_sampled
+
+def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/10, random_state=42, show_plots=True):
+   """
+   Train and evaluate multiple regression models on the same data
+   
+   Parameters:
+       X: Features matrix
+       y: Target variable
+       n_bins: Number of bins for sampling tree-based models (default: 10)
+       sample_fraction: Fraction of data to use for tree-based models (default: 1/3)
+       random_state: Random seed for reproducibility (default: 42)
+       show_plots: Whether to show comparison plots (default: True)
+   
+   Returns:
+       dict: Dictionary containing for each model:
+           - model: Trained model object
+           - test_pred: Predictions on test set
+           - test_actual: Actual test values 
+           - metrics: Dictionary of metrics (train/test MSE and R²)
+   """
+   # Convert inputs to numpy arrays if they're pandas DataFrames
+   if isinstance(X, pd.DataFrame):
+       X = X.to_numpy()
+   if isinstance(y, pd.Series):
+       y = y.to_numpy()
+
+   # Input validation
+   if len(X) < n_bins:
+       raise ValueError("Number of samples is less than number of bins")
+   
+   # Regular train-test split for linear models
+   X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=random_state)
+
+   # Define models
+   models = {
+       'Linear Regression': LinearRegression(),
+       'Ridge': Ridge(alpha=1.0),
+       'Lasso': Lasso(alpha=1.0)
+   }
+
+   # Train and evaluate linear models first
+   results = {}
+   for name, model in models.items():
+       print(f"\nTraining {name}...")
+       try:
+           model.fit(X_train, y_train)
+           y_train_pred = model.predict(X_train)
+           y_test_pred = model.predict(X_test)
+           
+           # Calculate metrics
+           train_mse = mean_squared_error(y_train, y_train_pred)
+           test_mse = mean_squared_error(y_test, y_test_pred)
+           train_r2 = r2_score(y_train, y_train_pred)
+           test_r2 = r2_score(y_test, y_test_pred)
+           
+           print(f"{name} Performance:")
+           print(f"Train MSE: {train_mse:.4f}")
+           print(f"Test MSE: {test_mse:.4f}")
+           print(f"Train R²: {train_r2:.4f}")
+           print(f"Test R²: {test_r2:.4f}")
+           
+           results[name] = {
+               'model': model,
+               'test_pred': y_test_pred,
+               'test_actual': y_test,
+               'metrics': {
+                   'train_mse': train_mse,
+                   'test_mse': test_mse,
+                   'train_r2': train_r2,
+                   'test_r2': test_r2
+               }
+           }
+       except Exception as e:
+           print(f"Error training {name}: {str(e)}")
+           continue
+
+   X_train_sampled, y_train_sampled = sample_training_data(X_train, y_train, sample_fraction=sample_fraction, n_bins=n_bins)
+
+   tree_models = {
+        'Random Forest': RandomForestRegressor(
+            n_estimators=50,           # Fewer trees
+            max_depth=10,              # Limit tree depth
+            min_samples_leaf=20,       # Require more samples per leaf
+            n_jobs=-1,                 # Use all CPU cores
+            random_state=random_state
+        ),
+        'XGBoost': XGBRegressor(
+            n_estimators=50,           # Fewer trees
+            learning_rate=0.1,
+            max_depth=6,
+            n_jobs=-1,                 # Use all CPU cores
+            tree_method='hist',        # Faster histogram-based algorithm
+            random_state=random_state
+        )
+   }
+
+   for name, model in tree_models.items():
+       print(f"\nTraining {name} with sampled data...")
+       try:
+           print("\nSampled data shapes:")
+           print(f"X shape: {X_train_sampled.shape} (samples, features+responders)")
+           print(f"y shape: {y_train_sampled.shape}")
+
+           model.fit(X_train_sampled, y_train_sampled)
+           
+           # Predict on full datasets
+           y_train_pred = model.predict(X_train)
+           y_test_pred = model.predict(X_test)
+           
+           # Calculate metrics
+           train_mse = mean_squared_error(y_train, y_train_pred)
+           test_mse = mean_squared_error(y_test, y_test_pred)
+           train_r2 = r2_score(y_train, y_train_pred)
+           test_r2 = r2_score(y_test, y_test_pred)
+           
+           print(f"{name} Performance:")
+           print(f"Train MSE: {train_mse:.4f}")
+           print(f"Test MSE: {test_mse:.4f}")
+           print(f"Train R²: {train_r2:.4f}")
+           print(f"Test R²: {test_r2:.4f}")
+           
+           results[name] = {
+               'model': model,
+               'test_pred': y_test_pred,
+               'test_actual': y_test,
+               'metrics': {
+                   'train_mse': train_mse,
+                   'test_mse': test_mse,
+                   'train_r2': train_r2,
+                   'test_r2': test_r2
+               }
+           }
+       except Exception as e:
+           print(f"Error training {name}: {str(e)}")
+           continue
+
+   # Plot comparison of actual vs predicted for all models
+   if show_plots and results:
+       plt.figure(figsize=(15, 10))
+       for i, (name, result) in enumerate(results.items(), 1):
+           plt.subplot(2, 3, i)
+           plt.scatter(result['test_actual'], result['test_pred'], alpha=0.5)
+           plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
+           plt.xlabel('Actual')
+           plt.ylabel('Predicted')
+           plt.title(f'{name}\nTest R²: {result["metrics"]["test_r2"]:.4f}')
+       
+       plt.tight_layout()
+       plt.show()
+   
+   return results
 
 def tune_xgboost(X, y):
     """
@@ -368,7 +518,9 @@ def tune_xgboost(X, y):
         n_jobs=-1,
         verbose=2
     )
-    
+
+    X_sampled, y_sampled = sample_training_data(X, y)
+
     # Fit GridSearchCV
     grid_search.fit(X, y)
     
