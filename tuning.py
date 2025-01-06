@@ -1,6 +1,6 @@
 from sklearn.model_selection import GridSearchCV
 from xgboost import XGBRegressor
-from methods import sample_training_data
+from data_engineering import sample_training_data
 from lightgbm import LGBMRegressor
 from catboost import CatBoostRegressor
 
