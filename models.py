@@ -8,6 +8,7 @@ from sklearn.ensemble import RandomForestRegressor
 from data_engineering import prepare_prediction_data, sample_training_data
 from lightgbm import LGBMRegressor
 from catboost import CatBoostRegressor
+import math
 
 
 def train_model(X, y):
@@ -100,7 +101,7 @@ def train_xgboost_model(X, y):
     return model, X_train, X_test, y_train, y_test
 
 
-def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/10, random_state=42, show_plots=True):
+def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/5, random_state=42, show_plots=True):
     """
     Train and evaluate multiple regression models on the same data
     
@@ -256,9 +257,15 @@ def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/10, ra
 
     # Plot comparison of actual vs predicted for all models
     if show_plots and results:
-        plt.figure(figsize=(15, 10))
+        # Calculate required grid dimensions
+        n_models = len(results)
+        n_cols = 3  # Keep 3 columns
+        n_rows = math.ceil(n_models / n_cols)
+        
+        plt.figure(figsize=(15, 5*n_rows))
+        
         for i, (name, result) in enumerate(results.items(), 1):
-            plt.subplot(2, 3, i)
+            plt.subplot(n_rows, n_cols, i)
             plt.scatter(result['test_actual'], result['test_pred'], alpha=0.5)
             plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
             plt.xlabel('Actual')
@@ -267,7 +274,7 @@ def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/10, ra
         
         plt.tight_layout()
         plt.show()
-    
+
     return results
 
 
