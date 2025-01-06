@@ -7,7 +7,7 @@ from xgboost import XGBRegressor
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
-from sklearn.model_selection import GridSearchCV
+
 
 def clean_data(features, responders):
 
@@ -38,6 +38,7 @@ def clean_data(features, responders):
     print(f"Number of clean responders: {len(clean_responders.columns)}")
     
     return clean_features, clean_responders
+
 
 def create_timeseries_for_symbol(df, symbol_id):
     """
@@ -87,6 +88,7 @@ def create_timeseries_for_symbol(df, symbol_id):
     clean_features, clean_responders = feature_series, responder_series
 
     return clean_features, clean_responders, target_series
+
 
 def plot_separate_timeseries(features, responders, target):
     """
@@ -138,6 +140,7 @@ def plot_separate_timeseries(features, responders, target):
     plt.tight_layout()
     plt.show()
 
+
 def prepare_regression_data(features, responders, target):
     common_indices = features.index.intersection(responders.index).intersection(target.index)
     X = pd.concat([features.loc[common_indices], responders.loc[common_indices]], axis=1)
@@ -146,6 +149,7 @@ def prepare_regression_data(features, responders, target):
     print(f"X shape: {X.shape}")
     print(f"y shape: {y.shape}")
     return X, y
+
 
 def train_model(X, y):
     """
@@ -162,6 +166,7 @@ def train_model(X, y):
     model.fit(X_train, y_train)
     
     return model, X_train, X_test, y_train, y_test
+
 
 def evaluate_model(model, X_train, X_test, y_train, y_test):
     """
@@ -207,6 +212,7 @@ def evaluate_model(model, X_train, X_test, y_train, y_test):
     
     return model
 
+
 def prepare_regression_data_responders_only(features, responders, target):
     """
     Prepare X and y for regression using only responders
@@ -231,6 +237,7 @@ def prepare_regression_data_responders_only(features, responders, target):
     print("Responders:", X.columns.tolist())
     
     return X, y
+
 
 def train_xgboost_model(X, y):
     """
@@ -258,6 +265,7 @@ def train_xgboost_model(X, y):
     )
     
     return model, X_train, X_test, y_train, y_test
+
 
 def sample_training_data(X_train, y_train, sample_fraction=1/10, n_bins=10):
 
@@ -330,6 +338,7 @@ def sample_training_data(X_train, y_train, sample_fraction=1/10, n_bins=10):
     print(f"y shape: {y_train_sampled.shape}")
 
     return X_train_sampled, y_train_sampled
+
 
 def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/10, random_state=42, show_plots=True):
    """
@@ -478,48 +487,6 @@ def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/10, ra
    
    return results
 
-def tune_xgboost(X, y):
-    """
-    Tune XGBoost hyperparameters using a focused parameter grid
-    """
-    # Define smaller parameter grid
-    param_grid = {
-        'n_estimators': [100, 200],          # removed 300
-        'max_depth': [4, 6],                 # just 2 values
-        'learning_rate': [0.01, 0.1],        # removed middle value
-        'subsample': [0.8, 1.0],             # removed 0.9
-        'min_child_weight': [1, 3]           # removed 5
-    }
-    
-    # Calculate total combinations
-    total_combinations = 2 * 2 * 2 * 2 * 2  # = 32 combinations
-    print(f"Total parameter combinations: {total_combinations}")
-    print(f"Total fits with 5-fold CV: {total_combinations * 5}")
-    
-    # Initialize XGBoost model
-    xgb = XGBRegressor(random_state=42)
-    
-    # Set up GridSearchCV
-    grid_search = GridSearchCV(
-        estimator=xgb,
-        param_grid=param_grid,
-        scoring='r2',
-        cv=5,
-        n_jobs=-1,
-        verbose=2
-    )
-
-    X_sampled, y_sampled = sample_training_data(X, y)
-
-    # Fit GridSearchCV
-    grid_search.fit(X_sampled, y_sampled)
-    
-    # Print results
-    print("\nBest parameters found:")
-    print(grid_search.best_params_)
-    print(f"\nBest cross-validation R²: {grid_search.best_score_:.4f}")
-    
-    return grid_search.best_estimator_
 
 def train_best_xgboost_model(X, y):
     """
@@ -552,6 +519,7 @@ def train_best_xgboost_model(X, y):
     
     return model, X_train, X_test, y_train, y_test
 
+
 def evaluate_best_model(model, X_train, X_test, y_train, y_test):
     """
     Evaluate its performance
@@ -573,6 +541,7 @@ def evaluate_best_model(model, X_train, X_test, y_train, y_test):
     print(f"Test R²: {test_r2:.4f}")
         
     return model
+
 
 def prepare_prediction_data(features_df, lags_df):
     """
@@ -598,6 +567,7 @@ def prepare_prediction_data(features_df, lags_df):
     print(f"Final X shape: {X.shape}")
     
     return X
+
 
 def make_predictions(model, features_df, lags_df):
     """
