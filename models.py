@@ -101,7 +101,7 @@ def train_xgboost_model(X, y):
     return model, X_train, X_test, y_train, y_test
 
 
-def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/5, random_state=42, show_plots=True):
+def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/10, random_state=42, show_plots=True):
     """
     Train and evaluate multiple regression models on the same data
     
