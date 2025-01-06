@@ -78,10 +78,7 @@ def create_timeseries_for_symbol(df, symbol_id):
     print(f"\nResponder series shape: {responder_series.shape}")
     print(f"\nTarget series shape: {target_series.shape}")
     
-    # clean_features, clean_responders = clean_data(feature_series, responder_series)
-    clean_features, clean_responders = feature_series, responder_series
-
-    return clean_features, clean_responders, target_series
+    return feature_series, responder_series, target_series
 
 
 def plot_separate_timeseries(features, responders, target):
@@ -135,14 +132,19 @@ def plot_separate_timeseries(features, responders, target):
     plt.show()
 
 
-def prepare_regression_data(features, responders, target):
-    common_indices = features.index.intersection(responders.index).intersection(target.index)
+def prepare_regression_data(features, responders, target=None):
+    if target is None:
+        common_indices = features.index.intersection(responders.index)
+    else:
+        common_indices = features.index.intersection(responders.index).intersection(target.index)
     X = pd.concat([features.loc[common_indices], responders.loc[common_indices]], axis=1)
-    y = target.loc[common_indices]
+    if target is not None:
+        y = target.loc[common_indices]
     print(f"\nRegression data shapes:")
     print(f"X shape: {X.shape}")
-    print(f"y shape: {y.shape}")
-    return X, y
+    if target is not None:
+        print(f"y shape: {y.shape}")
+    return X, y if target is not None else X
 
 
 def prepare_regression_data_responders_only(features, responders, target):
