@@ -259,6 +259,7 @@ def prepare_prediction_data(features_df, lags_df):
     clean_features = clean_features[feature_cols]
     
     # Get lagged responders (excluding responder_6)
+    lags_df.columns = [col.replace('_lag_1', '') if col.startswith('responder_') else col for col in lags_df.columns]
     lag_cols = [col for col in lags_df.columns if col.startswith('responder_') and not col.startswith('responder_6')]
     responder_lags = lags_df[lag_cols]
     
