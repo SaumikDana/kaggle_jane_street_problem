@@ -140,7 +140,8 @@ def prepare_regression_data(features, responders, target=None):
     X = pd.concat([features.loc[common_indices], responders.loc[common_indices]], axis=1)
     if target is not None:
         y = target.loc[common_indices]
-    print(f"\nRegression data shapes:")
+    if target is not None:
+        print(f"\nRegression data shapes:")
     print(f"X shape: {X.shape}")
     if target is not None:
         print(f"y shape: {y.shape}")
