@@ -68,57 +68,6 @@ def create_timeseries_for_symbol(df, symbol_id):
     return feature_series, responder_series, target_series
 
 
-def plot_separate_timeseries(features, responders, target):
-    """
-    Create separate subplots for first 5 features and all 8 responders
-    """
-    plt.figure(figsize=(20, 5))
-    clean_features_plotted = 0
-    all_features = features.columns
-    
-    # Keep plotting until we get 5 clean features
-    for feature_name in all_features:
-        # Check if this feature has any NaN
-        if not features[feature_name].isna().any():
-            ax = plt.subplot(1, 5, clean_features_plotted + 1)
-            timeseries = features[feature_name]
-            ax.plot(timeseries, color='blue', alpha=0.7)
-            ax.set_title(feature_name)
-            ax.grid(True)
-            if clean_features_plotted == 0:
-                ax.set_ylabel('Value')
-            ax.set_xlabel('Time Steps')
-            
-            clean_features_plotted += 1
-            if clean_features_plotted == 5:  # Stop after 5 clean features
-                break
-    
-    plt.suptitle('First 5 Non-NaN Features', y=1.05)
-    plt.tight_layout()
-    plt.show()
-
-    # Second plot - Responders
-    plt.figure(figsize=(20, 8))
-    for i, col in enumerate(responders.columns):
-        ax = plt.subplot(2, 4, i+1)  # 2 rows, 4 columns
-        ax.plot(responders[col], color='red', alpha=0.7)
-        ax.set_title(f'Responder {col[-1]}')
-        ax.grid(True)
-        if i % 4 == 0:  # Add y-label for leftmost plots
-            ax.set_ylabel('Value')
-        ax.set_xlabel('Time Steps')
-    plt.suptitle('All 8 Responders', y=1.05)
-    plt.tight_layout()
-    plt.show()
-
-    # Third plot - Target
-    plt.figure(figsize=(10, 6))
-    plt.plot(target, color='green', alpha=0.7)
-    plt.title('Target (responder_6)')
-    plt.tight_layout()
-    plt.show()
-
-
 def prepare_regression_data(features, responders, target=None):
     if target is None:
         common_indices = features.index.intersection(responders.index)
@@ -133,32 +82,6 @@ def prepare_regression_data(features, responders, target=None):
     if target is not None:
         print(f"y shape: {y.shape}")
     return X, y if target is not None else X
-
-
-def prepare_regression_data_responders_only(features, responders, target):
-    """
-    Prepare X and y for regression using only responders
-    """
-    # Reset indices
-    responders = responders.reset_index(drop=True)
-    target = target.reset_index(drop=True)
-    
-    # Make sure all have same length
-    min_len = min(len(responders), len(target))
-    responders = responders.iloc[:min_len]
-    target = target.iloc[:min_len]
-    
-    # X is just responders
-    X = responders
-    y = target
-    
-    print("\nRegression data shapes:")
-    print(f"X shape: {X.shape} (samples, responders)")
-    print(f"y shape: {y.shape}")
-    print("\nResponder columns:")
-    print("Responders:", X.columns.tolist())
-    
-    return X, y
 
 
 def sample_training_data(X_train, y_train, sample_fraction=1/10, n_bins=10):
@@ -232,6 +155,83 @@ def sample_training_data(X_train, y_train, sample_fraction=1/10, n_bins=10):
     print(f"y shape: {y_train_sampled.shape}")
 
     return X_train_sampled, y_train_sampled
+
+
+def plot_separate_timeseries(features, responders, target):
+    """
+    Create separate subplots for first 5 features and all 8 responders
+    """
+    plt.figure(figsize=(20, 5))
+    clean_features_plotted = 0
+    all_features = features.columns
+    
+    # Keep plotting until we get 5 clean features
+    for feature_name in all_features:
+        # Check if this feature has any NaN
+        if not features[feature_name].isna().any():
+            ax = plt.subplot(1, 5, clean_features_plotted + 1)
+            timeseries = features[feature_name]
+            ax.plot(timeseries, color='blue', alpha=0.7)
+            ax.set_title(feature_name)
+            ax.grid(True)
+            if clean_features_plotted == 0:
+                ax.set_ylabel('Value')
+            ax.set_xlabel('Time Steps')
+            
+            clean_features_plotted += 1
+            if clean_features_plotted == 5:  # Stop after 5 clean features
+                break
+    
+    plt.suptitle('First 5 Non-NaN Features', y=1.05)
+    plt.tight_layout()
+    plt.show()
+
+    # Second plot - Responders
+    plt.figure(figsize=(20, 8))
+    for i, col in enumerate(responders.columns):
+        ax = plt.subplot(2, 4, i+1)  # 2 rows, 4 columns
+        ax.plot(responders[col], color='red', alpha=0.7)
+        ax.set_title(f'Responder {col[-1]}')
+        ax.grid(True)
+        if i % 4 == 0:  # Add y-label for leftmost plots
+            ax.set_ylabel('Value')
+        ax.set_xlabel('Time Steps')
+    plt.suptitle('All 8 Responders', y=1.05)
+    plt.tight_layout()
+    plt.show()
+
+    # Third plot - Target
+    plt.figure(figsize=(10, 6))
+    plt.plot(target, color='green', alpha=0.7)
+    plt.title('Target (responder_6)')
+    plt.tight_layout()
+    plt.show()
+
+
+def prepare_regression_data_responders_only(features, responders, target):
+    """
+    Prepare X and y for regression using only responders
+    """
+    # Reset indices
+    responders = responders.reset_index(drop=True)
+    target = target.reset_index(drop=True)
+    
+    # Make sure all have same length
+    min_len = min(len(responders), len(target))
+    responders = responders.iloc[:min_len]
+    target = target.iloc[:min_len]
+    
+    # X is just responders
+    X = responders
+    y = target
+    
+    print("\nRegression data shapes:")
+    print(f"X shape: {X.shape} (samples, responders)")
+    print(f"y shape: {y.shape}")
+    print("\nResponder columns:")
+    print("Responders:", X.columns.tolist())
+    
+    return X, y
 
 
 def prepare_prediction_data(features_df, lags_df):
