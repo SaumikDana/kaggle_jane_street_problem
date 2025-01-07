@@ -10,23 +10,10 @@ def clean_data(features, responders):
     print(f"Total responder columns before cleaning: {len(responders.columns)}")
     
     # Get clean features (no NaN)
-    features_with_nan = features.columns[features.isna().any()].tolist()
     clean_features = features.loc[:, ~features.isna().any()].reset_index(drop=True)
     
     # Get clean responders (no NaN)
-    responders_with_nan = responders.columns[responders.isna().any()].tolist()
     clean_responders = responders.loc[:, ~responders.isna().any()].reset_index(drop=True)
-        
-    # Print dropped columns
-    if features_with_nan:
-        print("\nFeature columns dropped due to NaN values:")
-        for col in features_with_nan:
-            print(f"- {col}")
-    
-    if responders_with_nan:
-        print("\nResponder columns dropped due to NaN values:")
-        for col in responders_with_nan:
-            print(f"- {col}")
     
     print(f"\nNumber of clean features: {len(clean_features.columns)}")
     print(f"Number of clean responders: {len(clean_responders.columns)}")

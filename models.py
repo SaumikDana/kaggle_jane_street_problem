@@ -28,26 +28,10 @@ def train_model(X, y):
     return model, X_train, X_test, y_train, y_test
 
 
-def evaluate_model(model, X_train, X_test, y_train, y_test):
+def plot_performance(y_test, y_test_pred):
     """
-    Evaluate its performance
+    Plot performance
     """
-    # Make predictions
-    y_train_pred = model.predict(X_train)
-    y_test_pred = model.predict(X_test)
-    
-    # Calculate metrics
-    train_mse = mean_squared_error(y_train, y_train_pred)
-    test_mse = mean_squared_error(y_test, y_test_pred)
-    train_r2 = r2_score(y_train, y_train_pred)
-    test_r2 = r2_score(y_test, y_test_pred)
-    
-    print("\nModel Performance:")
-    print(f"Train MSE: {train_mse:.4f}")
-    print(f"Test MSE: {test_mse:.4f}")
-    print(f"Train R²: {train_r2:.4f}")
-    print(f"Test R²: {test_r2:.4f}")
-    
     # Plot actual vs predicted for test set
     plt.figure(figsize=(10, 5))
     
@@ -70,6 +54,29 @@ def evaluate_model(model, X_train, X_test, y_train, y_test):
     plt.tight_layout()
     plt.show()
     
+    return
+
+
+def evaluate_model(model, X_train, X_test, y_train, y_test):
+    """
+    Evaluate its performance
+    """
+    # Make predictions
+    y_train_pred = model.predict(X_train)
+    y_test_pred = model.predict(X_test)
+    
+    # Calculate metrics
+    train_mse = mean_squared_error(y_train, y_train_pred)
+    test_mse = mean_squared_error(y_test, y_test_pred)
+    train_r2 = r2_score(y_train, y_train_pred)
+    test_r2 = r2_score(y_test, y_test_pred)
+    
+    print("\nModel Performance:")
+    print(f"Train MSE: {train_mse:.4f}")
+    print(f"Test MSE: {test_mse:.4f}")
+    print(f"Train R²: {train_r2:.4f}")
+    print(f"Test R²: {test_r2:.4f}")
+
     return model
 
 

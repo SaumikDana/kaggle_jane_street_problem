@@ -33,7 +33,7 @@ def tune_xgboost(X, y):
         scoring='r2',
         cv=5,
         n_jobs=-1,
-        verbose=2
+        verbose=1
     )
 
     X_sampled, y_sampled = sample_training_data(X, y)
@@ -76,7 +76,7 @@ def tune_lightgbm(X, y):
         scoring='r2',
         cv=5,
         n_jobs=-1,
-        verbose=2
+        verbose=1
     )
 
     X_sampled, y_sampled = sample_training_data(X, y)
@@ -113,7 +113,7 @@ def tune_catboost(X, y):
         scoring='r2',
         cv=5,
         n_jobs=-1,
-        verbose=2
+        verbose=1
     )
 
     X_sampled, y_sampled = sample_training_data(X, y)
