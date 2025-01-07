@@ -339,30 +339,3 @@ def evaluate_best_model(model, X_train, X_test, y_train, y_test):
         
     return model
 
-
-def make_predictions(model, features_df, lags_df):
-    """
-    Use trained model to predict responder_6
-    """
-    # Prepare prediction data
-    X = prepare_prediction_data(features_df, lags_df)
-    
-    # Make predictions
-    predictions = model.predict(X)
-    
-    # Create output DataFrame
-    results = pd.DataFrame({
-        'symbol_id': features_df['symbol_id'],
-        'predicted_responder_6': predictions
-    })
-    
-    if 'responder_6_lag_1' in lags_df.columns:
-        results['actual_lag'] = lags_df['responder_6_lag_1']
-        
-    if 'weight' in features_df.columns:
-        results['weight'] = features_df['weight']
-    
-    print("\nPrediction Results:")
-    print(results)
-    
-    return results
