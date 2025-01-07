@@ -15,6 +15,12 @@ def train_model(X, y):
     """
     Train a linear regression model
     """
+    # Convert inputs to numpy arrays if they're pandas DataFrames
+    if isinstance(X, pd.DataFrame):
+        X = X.to_numpy()
+    if isinstance(y, pd.Series):
+        y = y.to_numpy()
+
     # Split data into train and test sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     print("Train/Test split sizes:")
@@ -84,6 +90,12 @@ def train_xgboost_model(X, y):
     """
     Train an XGBoost regression model with basic hyperparameters
     """
+    # Convert inputs to numpy arrays if they're pandas DataFrames
+    if isinstance(X, pd.DataFrame):
+        X = X.to_numpy()
+    if isinstance(y, pd.Series):
+        y = y.to_numpy()
+
     # Split data into train and test sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     print("Train/Test split sizes:")
@@ -289,6 +301,12 @@ def train_best_xgboost_model(X, y):
     """
     Train an XGBoost regression model with basic hyperparameters
     """
+    # Convert inputs to numpy arrays if they're pandas DataFrames
+    if isinstance(X, pd.DataFrame):
+        X = X.to_numpy()
+    if isinstance(y, pd.Series):
+        y = y.to_numpy()
+
     # Split data into train and test sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     print("Train/Test split sizes:")
