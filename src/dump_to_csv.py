@@ -1,7 +1,9 @@
 import pandas as pd
 import os
 
+
 if __name__ == "__main__":
+
     # Create output directory if it doesn't exist
     output_dir = "symbol_data"
     if not os.path.exists(output_dir):

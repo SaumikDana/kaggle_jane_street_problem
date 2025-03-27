@@ -2,20 +2,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 import numpy as np
 
+
 def reduce_dimensions_pca(X, n_components=None, variance_threshold=None):
-   """
-   Reduce dimensions using PCA. Specify either n_components or variance_threshold.
-   
-   Args:
-       X: Input features matrix
-       n_components: Number of components to keep
-       variance_threshold: Minimum cumulative variance to explain (0-1)
-   
-   Returns:
-       X_reduced: Reduced feature matrix
-       pca: Fitted PCA object
-       scaler: Fitted StandardScaler object
-   """
+
    scaler = StandardScaler()
    X_scaled = scaler.fit_transform(X)
    

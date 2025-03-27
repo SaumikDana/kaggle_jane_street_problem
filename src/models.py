@@ -12,9 +12,7 @@ import math
 
 
 def train_model(X, y):
-    """
-    Train a linear regression model
-    """
+
     # Convert inputs to numpy arrays if they're pandas DataFrames
     if isinstance(X, pd.DataFrame):
         X = X.to_numpy()
@@ -35,9 +33,7 @@ def train_model(X, y):
 
 
 def plot_performance(y_test, y_test_pred):
-    """
-    Plot performance
-    """
+
     # Plot actual vs predicted for test set
     plt.figure(figsize=(10, 5))
     
@@ -64,9 +60,7 @@ def plot_performance(y_test, y_test_pred):
 
 
 def evaluate_model(model, X_train, X_test, y_train, y_test):
-    """
-    Evaluate its performance
-    """
+
     # Make predictions
     y_train_pred = model.predict(X_train)
     y_test_pred = model.predict(X_test)
@@ -87,9 +81,7 @@ def evaluate_model(model, X_train, X_test, y_train, y_test):
 
 
 def train_xgboost_model(X, y):
-    """
-    Train an XGBoost regression model with basic hyperparameters
-    """
+
     # Convert inputs to numpy arrays if they're pandas DataFrames
     if isinstance(X, pd.DataFrame):
         X = X.to_numpy()
@@ -97,7 +89,12 @@ def train_xgboost_model(X, y):
         y = y.to_numpy()
 
     # Split data into train and test sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, 
+        y, 
+        test_size=0.2, 
+        random_state=42
+    )
     print("Train/Test split sizes:")
     print(f"X_train: {X_train.shape}")
     print(f"X_test: {X_test.shape}")
@@ -120,25 +117,15 @@ def train_xgboost_model(X, y):
     return model, X_train, X_test, y_train, y_test
 
 
-def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/10, random_state=42, show_plots=True):
-    """
-    Train and evaluate multiple regression models on the same data
-    
-    Parameters:
-        X: Features matrix
-        y: Target variable
-        n_bins: Number of bins for sampling tree-based models (default: 10)
-        sample_fraction: Fraction of data to use for tree-based models (default: 1/3)
-        random_state: Random seed for reproducibility (default: 42)
-        show_plots: Whether to show comparison plots (default: True)
-    
-    Returns:
-        dict: Dictionary containing for each model:
-            - model: Trained model object
-            - test_pred: Predictions on test set
-            - test_actual: Actual test values 
-            - metrics: Dictionary of metrics (train/test MSE and R²)
-    """
+def train_and_evaluate_multiple_models(
+        X, 
+        y, 
+        n_bins=10, 
+        sample_fraction=1/10, 
+        random_state=42, 
+        show_plots=True
+    ):
+
     # Convert inputs to numpy arrays if they're pandas DataFrames
     if isinstance(X, pd.DataFrame):
         X = X.to_numpy()
@@ -150,7 +137,12 @@ def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/10, ra
         raise ValueError("Number of samples is less than number of bins")
     
     # Regular train-test split for linear models
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=random_state)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, 
+        y, 
+        test_size=0.2, 
+        random_state=random_state
+    )
 
     # Define models
     models = {
@@ -161,8 +153,11 @@ def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/10, ra
 
     # Train and evaluate linear models first
     results = {}
+
     for name, model in models.items():
+
         print(f"\nTraining {name}...")
+
         try:
             model.fit(X_train, y_train)
             y_train_pred = model.predict(X_train)
@@ -195,7 +190,12 @@ def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/10, ra
             print(f"Error training {name}: {str(e)}")
             continue
 
-    X_train_sampled, y_train_sampled = sample_training_data(X_train, y_train, sample_fraction=sample_fraction, n_bins=n_bins)
+    X_train_sampled, y_train_sampled = sample_training_data(
+        X_train, 
+        y_train, 
+        sample_fraction=sample_fraction, 
+        n_bins=n_bins
+    )
 
     tree_models = {
         'Random Forest': RandomForestRegressor(
@@ -235,7 +235,9 @@ def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/10, ra
     }
 
     for name, model in tree_models.items():
+
         print(f"\nTraining {name} with sampled data...")
+
         try:
             # Special handling for CatBoost to suppress additional output
             if name == 'CatBoost':
@@ -298,9 +300,7 @@ def train_and_evaluate_multiple_models(X, y, n_bins=10, sample_fraction=1/10, ra
 
 
 def train_best_xgboost_model(X, y):
-    """
-    Train an XGBoost regression model with basic hyperparameters
-    """
+
     # Convert inputs to numpy arrays if they're pandas DataFrames
     if isinstance(X, pd.DataFrame):
         X = X.to_numpy()
@@ -308,7 +308,12 @@ def train_best_xgboost_model(X, y):
         y = y.to_numpy()
 
     # Split data into train and test sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, 
+        y, 
+        test_size=0.2, 
+        random_state=42
+    )
     print("Train/Test split sizes:")
     print(f"X_train: {X_train.shape}")
     print(f"X_test: {X_test.shape}")
@@ -336,9 +341,7 @@ def train_best_xgboost_model(X, y):
 
 
 def evaluate_best_model(model, X_train, X_test, y_train, y_test):
-    """
-    Evaluate its performance
-    """
+
     # Make predictions
     y_train_pred = model.predict(X_train)
     y_test_pred = model.predict(X_test)

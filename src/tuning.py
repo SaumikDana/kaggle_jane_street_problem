@@ -6,9 +6,7 @@ from catboost import CatBoostRegressor
 
 
 def tune_xgboost(X, y):
-    """
-    Tune XGBoost hyperparameters using a focused parameter grid
-    """
+
     # Define smaller parameter grid
     param_grid = {
         'n_estimators': [100, 200],          # removed 300
@@ -50,9 +48,7 @@ def tune_xgboost(X, y):
 
 
 def tune_lightgbm(X, y):
-    """
-    Tune LightGBM hyperparameters using a focused parameter grid
-    """
+
     param_grid = {
         'n_estimators': [100, 200],
         'max_depth': [4, 6],
@@ -93,9 +89,7 @@ def tune_lightgbm(X, y):
 
 
 def tune_catboost(X, y):
-    """
-    Tune CatBoost hyperparameters using a focused parameter grid
-    """
+
     param_grid = {
         'iterations': [100, 200],
         'depth': [4, 6],

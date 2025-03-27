@@ -22,14 +22,7 @@ def clean_data(features, responders):
 
 
 def create_timeseries_for_symbol(df, symbol_id):
-    """
-    Create feature and responder time series for a given symbol
-    Args:
-        df: Input dataframe
-        symbol_id: Symbol to process
-    Returns:
-        tuple: (feature_series, responder_series, target_series)
-    """
+
     # Filter for our symbol, then sort by date_id and time_id 
     df_for_symbol = df[df['symbol_id'] == symbol_id].copy()
     symbol_data = df_for_symbol.sort_values(['date_id', 'time_id'])
@@ -69,18 +62,23 @@ def create_timeseries_for_symbol(df, symbol_id):
 
 
 def prepare_regression_data(features, responders, target=None):
+
     if target is None:
         common_indices = features.index.intersection(responders.index)
     else:
         common_indices = features.index.intersection(responders.index).intersection(target.index)
     X = pd.concat([features.loc[common_indices], responders.loc[common_indices]], axis=1)
+
     if target is not None:
         y = target.loc[common_indices]
     if target is not None:
         print(f"\nRegression data shapes:")
+
     print(f"X shape: {X.shape}")
+
     if target is not None:
         print(f"y shape: {y.shape}")
+
     return X, y if target is not None else X
 
 
@@ -158,9 +156,7 @@ def sample_training_data(X_train, y_train, sample_fraction=1/10, n_bins=10):
 
 
 def plot_separate_timeseries(features, responders, target):
-    """
-    Create separate subplots for first 5 features and all 8 responders
-    """
+
     plt.figure(figsize=(20, 5))
     clean_features_plotted = 0
     all_features = features.columns
@@ -209,9 +205,7 @@ def plot_separate_timeseries(features, responders, target):
 
 
 def prepare_regression_data_responders_only(features, responders, target):
-    """
-    Prepare X and y for regression using only responders
-    """
+
     # Reset indices
     responders = responders.reset_index(drop=True)
     target = target.reset_index(drop=True)
@@ -235,11 +229,7 @@ def prepare_regression_data_responders_only(features, responders, target):
 
 
 def prepare_prediction_data(features_df, lags_df):
-    """
-    Prepare data for prediction by:
-    1. Getting clean features (no NaN)
-    2. Combining with lagged responders (excluding responder_6)
-    """
+
     # Get clean features
     clean_features = features_df.loc[:, ~features_df.isna().any()]
     feature_cols = [col for col in clean_features.columns if col.startswith('feature_')]
