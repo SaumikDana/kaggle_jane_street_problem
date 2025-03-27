@@ -1,5 +1,5 @@
 
-![pipeline](https://github.com/user-attachments/assets/2b4a6fbd-16c0-46f3-b0ac-8e484441a261)
+![problem](https://github.com/user-attachments/assets/8a5d2d12-9441-4cf7-8bf8-4ed3875c4acb)
 
 
 ## 📓 `submission.ipynb` – Final Prediction Pipeline
@@ -106,3 +106,5 @@ For each `symbol_id`:
 - Returned by the notebook (can be exported to CSV)
 
 ---
+
+![pipeline](https://github.com/user-attachments/assets/2b4a6fbd-16c0-46f3-b0ac-8e484441a261)
