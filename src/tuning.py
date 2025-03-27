@@ -1,8 +1,9 @@
+import setup_path
 from sklearn.model_selection import GridSearchCV
 from xgboost import XGBRegressor
-from data_engineering import sample_training_data
 from lightgbm import LGBMRegressor
 from catboost import CatBoostRegressor
+from src.data_engineering import sample_training_data
 
 
 def tune_xgboost(X, y):

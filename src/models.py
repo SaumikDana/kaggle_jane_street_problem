@@ -1,3 +1,4 @@
+import setup_path
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
@@ -5,10 +6,10 @@ from sklearn.metrics import mean_squared_error, r2_score
 from xgboost import XGBRegressor
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.ensemble import RandomForestRegressor
-from data_engineering import prepare_prediction_data, sample_training_data
 from lightgbm import LGBMRegressor
 from catboost import CatBoostRegressor
 import math
+from src.data_engineering import sample_training_data
 
 
 def train_model(X, y):
