@@ -43,7 +43,7 @@
 
 ### `submission.ipynb`
 
-**Goal:** Train final model and make predictions for submission.
+**Goal:** Train a separate model per symbol and make predictions for submission.
 
 **Workflow:**
 
@@ -51,23 +51,21 @@
   - Loads standard packages plus XGBoost, PCA, and preprocessing.
   - Reads all required training/test data.
 
-- **Train Across All Symbols:**
-  - Loops over each `symbol_id`, and for each:
-    - Prepares features, responders, and targets.
-    - Cleans NaNs.
+- **Per-Symbol Training:**
+  - For each `symbol_id`, it:
+    - Combines and cleans data.
+    - Extracts symbol-specific features, responders, and targets.
     - Applies PCA (25 components).
     - Samples training data.
-    - Stores reduced features and targets for later concatenation.
-
-- **Final Model Training:**
-  - Concatenates all sampled features/targets across symbols.
-  - Trains a single global XGBoost model.
+    - Trains a **dedicated XGBoost model** for that symbol.
+    - Saves the trained model, PCA, scaler, and columns used.
 
 - **Prediction Loop:**
   - For each symbol in the test data:
-    - Prepares test features using the same columns and PCA.
+    - Prepares test features using the same pipeline (cleaning + PCA).
+    - Loads the corresponding trained model.
     - Generates prediction for `responder_6`.
-    - Appends to a final prediction DataFrame.
+    - Appends results to a final predictions DataFrame.
 
 ✅ **Returns** `row_id` and predicted `responder_6` for submission.
 
@@ -96,5 +94,3 @@
 - **Model Evaluation:**
   - Trains best model on train split.
   - Evaluates on test split using R² and MSE.
-
----
