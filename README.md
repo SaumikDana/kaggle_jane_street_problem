@@ -1,19 +1,18 @@
 
 ![problem](https://github.com/user-attachments/assets/8a5d2d12-9441-4cf7-8bf8-4ed3875c4acb)
 
-
 ## 📓 `submission.ipynb` – Final Prediction Pipeline
 
-**Goal:** Train a global model across all symbols and generate predictions for the `responder_6` target using test data.
+**Goal:** Train **a separate model for each symbol** and generate predictions for the `responder_6` target using test data.
 
 ---
 
 ### 🧩 1. Imports and Setup
 
 - Loads essential packages:
-  - `pandas`, `polars` for data handling
-  - `sklearn` for PCA and preprocessing
-  - `xgboost` for modeling
+  - `pandas`, `polars` for data handling  
+  - `sklearn` for PCA and preprocessing  
+  - `xgboost` for modeling  
   - `os`, `numpy` for utilities
 
 - Sets up `script_directory` and `data_directory` to point to the root `data/` folder.
@@ -23,8 +22,8 @@
 ### 📥 2. Load Data
 
 - Reads:
-  - `test.parquet` → test features
-  - `lags.parquet` → lagged responders for test data
+  - `test.parquet` → test features  
+  - `lags.parquet` → lagged responders for test data  
   - Training partitions (`train_0.parquet` assumed, can scale to 10)
 
 ---
@@ -57,53 +56,45 @@
 
 ---
 
-### 🏋️‍♂️ 4. Train on All Symbols
+### 🧠 4. Train Per-Symbol Models
 
 For each `symbol_id`:
 - **Data Aggregation:**
   - Combines all partitioned rows matching the symbol.
 - **Preprocessing:**
-  - Extracts features, responders, and target
-  - Cleans NaNs
+  - Extracts features, responders, and target  
+  - Cleans NaNs  
   - Combines into training data
 - **Dimensionality Reduction:**
   - Applies PCA with 25 components
 - **Sampling:**
   - Uses `sample_training_data` to reduce volume
+- **Model Training:**
+  - Trains a **dedicated `XGBRegressor`** for that symbol using its own data
 - **Storage:**
-  - Collects reduced feature matrices and targets in lists (`all_X_reduced`, `all_y`)
-  - Stores PCA, scaler, and feature columns used per symbol in dictionaries for reuse
+  - Stores PCA, scaler, model, and selected feature columns per symbol for reuse during prediction
 
 ---
 
-### 🤖 5. Final Model Training
+### 📈 5. Prediction Logic – `predict()` Function
 
-- Concatenates all sampled data across symbols
-- Splits into train/test sets
-- Trains a single `XGBRegressor` on all combined training data
-- Evaluation is minimal here—the model is assumed ready for inference after training
-
----
-
-### 📈 6. Prediction Logic – `predict()` Function
-
-- Loops through each `symbol_id` present in the test data
+- Loops through each `symbol_id` in the test data
 - For each symbol:
   - Extracts test rows and matching lagged responders
-  - Prepares model input using the same cleaned columns
-  - Applies saved `scaler` and `pca` for that symbol
-  - Makes prediction using the trained global model
-  - Appends predicted `responder_6` value with corresponding `row_id` to output DataFrame
+  - Prepares model input using cleaned features and responders
+  - Applies the corresponding `scaler` and `pca`
+  - Uses the **symbol-specific model** to predict `responder_6`
+  - Appends the prediction and `row_id` to the output DataFrame
 
 ---
 
-### ✅ 7. Final Output
+### ✅ 6. Final Output
 
 - The predictions DataFrame is sorted by `row_id`
 - Ensures structure:
   - Columns: `['row_id', 'responder_6']`
   - Format: `pandas` or `polars` DataFrame
-- Returned by the notebook (can be exported to CSV)
+- Can be exported to CSV for submission
 
 ---
 
