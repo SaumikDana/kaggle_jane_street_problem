@@ -1,6 +1,10 @@
 
 ![problem](https://github.com/user-attachments/assets/8a5d2d12-9441-4cf7-8bf8-4ed3875c4acb)
 
+
+![symbol_model_workflow](https://github.com/user-attachments/assets/3a47d5bd-8439-46e0-a6f4-6a1768356bf6)
+
+
 ## 📓 `submission.ipynb` – Final Prediction Pipeline
 
 **Goal:** Train **a separate model for each symbol** and generate predictions for the `responder_6` target using test data.
