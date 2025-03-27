@@ -98,3 +98,5 @@ For each `symbol_id`:
 
 ---
 
+<img width="626" alt="submisssion" src="https://github.com/user-attachments/assets/57f1e520-0f6b-4080-922e-e85e7db3ed72" />
+
