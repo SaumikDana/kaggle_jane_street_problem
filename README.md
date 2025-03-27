@@ -98,4 +98,3 @@ For each `symbol_id`:
 
 ---
 
-![pipeline](https://github.com/user-attachments/assets/2b4a6fbd-16c0-46f3-b0ac-8e484441a261)
